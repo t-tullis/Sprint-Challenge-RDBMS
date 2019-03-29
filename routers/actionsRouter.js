@@ -7,7 +7,7 @@ const Actions = require('../helpers/actionsModel.js')
 //Get all actions
 router.get('/', (req, res) => {
     Actions.getActions().then(action => {
-        res.status(200).json(action)
+        res.status(200).json({action})
     }).catch(error => {
         res.status(500).json(error)
     })
