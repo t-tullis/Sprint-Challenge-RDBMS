@@ -4,7 +4,22 @@ const db = require('../data/dbConfig.js')
 
 const Projects = require('../helpers/projectModel.js')
 
-//Get all Projects
+//Getting projects 
+const getProjectWithActions = async id => {
+    try {
+      const project = await db('projects').where({ id });
+      const actions = await db.select('actions. *')
+        .from('projects')
+        .join('actions', {'projects.id': 'actions.project_id'})
+        .where({ 'projects.id': id });
+      return { ...project[0], actions };
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  };
+
+  //Get all Projects
 router.get('/', (req, res) => {
     Projects.getProjects().then(project => {
         res.status(200).json(project)
@@ -22,19 +37,18 @@ router.get('/', (req, res) => {
     })
 })
 
-// Get project by ID
- router.get('/:id', (req, res) => {
-     const { id } = req.params
-    db('projects')
-    .where({ 'projects.id': id })
-    .join('actions', {'projects.id': 'actions.project_id'})
-    .then(project => {
-          res.status(200).json({project})
-    }).catch(error => {
-        res.status(500).json(error)
-    })
-})
 
-
-
+  router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+      const projects = await getProjectWithActions(id);
+      if(projects.actions.length === 0){
+      res.status(404).json({ message: "This project does not exist." })
+      }else{
+          res.status(200).json({projects});
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'There was a problem getting that project.' });
+    }
+  });
 module.exports = router
